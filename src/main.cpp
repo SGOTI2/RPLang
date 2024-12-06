@@ -20,8 +20,7 @@ string ReadFile(string fileName)
 
   else 
   {
-    fprintf(stderr, "Failure to open file.\n");
-    exit(EXIT_FAILURE);
+    throw runtime_error("The program was not able to be read");
   }
 
   return content;
