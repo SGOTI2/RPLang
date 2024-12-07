@@ -8,8 +8,9 @@ typedef variant<
   string, 
   double, 
   bool 
-> VariableType;
+> variableType;
 
+typedef pair<string, vector<variableType>> instruction;
 /*
   [
     (string CMD_Name, [VariableType args...]),
@@ -19,21 +20,20 @@ typedef variant<
     ...
   ]
 */
-typedef vector<
-  pair<string, vector<VariableType>>
-> Program;
+typedef vector<instruction> program;
 
-class ExecutionScope 
+class ExecutionScope
 {
 private:
-  string symbol = "";
-  Program program;
   int instructionCounter = 0;
-  ExecutionScope* jmpReturnScope = nullptr;
+  ExecutionScope *jmpReturnScope = nullptr;
   bool halt = false;
-  unordered_map<string, VariableType> internal_variables;
+  unordered_map<string, variableType> internal_variables;
 
 public:
-  ExecutionScope();
+  const string symbol = "";
+  const program instructions;
+  ExecutionScope(const program &instructions_);
+  ExecutionScope(const program &instructions_, const string symbol_);
   void ExecuteScope();
 };
