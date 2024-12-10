@@ -1,4 +1,3 @@
 func hello;
   log "Hello?";
 end;
-log "Hello World";

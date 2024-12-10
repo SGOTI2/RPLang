@@ -13,8 +13,7 @@ void Parser::parseFileContents(const string &contents)
 
   (void)detectSubScopes(&fullProgram);
 
-  executionScopes->push_back(ExecutionScope(fullProgram));
-  ExecutionScope rootExecutionScope = executionScopes->front();
+  executionScopes->insert(executionScopes->begin(), ExecutionScope(fullProgram));
 }
 
 program Parser::convertToProgram(const string &plainText)
@@ -65,7 +64,8 @@ program Parser::convertToProgram(const string &plainText)
       if (token.back() == '\"')
       {
         awaitingStringClose = false;
-        args.push_back(stringVar);
+        // Put string arg in args, removing the leading and trailing quotes
+        args.push_back(stringVar.substr(1, stringVar.size() - 2));
       }
     }
 

@@ -40,6 +40,9 @@ public:
 
   template <typename T>
   static T getArgAtAs(const vector<variableType> &args, size_t index);
+
+  template <typename T>
+  static vector<T> getAllArgsAs(const vector<variableType> &args);
 };
 
 template <typename T>
@@ -56,4 +59,22 @@ inline T Parser::getArgAtAs(const vector<variableType> &args, size_t index)
     return get<T>(arg);
   }
   throw ParsingError("Argument is a incorrect type");
+}
+
+template <typename T>
+inline vector<T> Parser::getAllArgsAs(const vector<variableType> &args)
+{
+  vector<T> result;
+  for (auto &v : args)
+  {
+    visit([&result](auto &&val) 
+    {
+      using argT = decay_t<decltype(val)>;
+      if constexpr (is_same_v<T, argT>)
+      {
+        result.push_back(val);
+      }
+    }, v);
+  }
+  return result;
 }

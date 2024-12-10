@@ -24,16 +24,14 @@ typedef vector<instruction> program;
 
 class ExecutionScope
 {
-private:
-  int instructionCounter = 0;
+public:
+  size_t instructionCounter = 0;
   ExecutionScope *jmpReturnScope = nullptr;
   bool halt = false;
   unordered_map<string, variableType> internal_variables;
+  string symbol = "";
+  program instructions;
 
-public:
-  const string symbol = "";
-  const program instructions;
   ExecutionScope(const program &instructions_);
   ExecutionScope(const program &instructions_, const string symbol_);
-  void ExecuteScope();
 };

@@ -6,19 +6,21 @@ using namespace std;
 
 #include "parser.hpp"
 #include "executionScope.hpp"
+#include "executor.hpp"
+#include "builtin.hpp"
 
 string ReadFile(string fileName)
 {
   string content;
-  ifstream programFile {fileName};
+  ifstream programFile{fileName};
   if (programFile.is_open())
   {
     // Read the entire contents of the file
-    content.assign( (std::istreambuf_iterator<char>(programFile) ),
-                    (std::istreambuf_iterator<char>()    ) );
+    content.assign((std::istreambuf_iterator<char>(programFile)),
+                   (std::istreambuf_iterator<char>()));
   }
 
-  else 
+  else
   {
     throw runtime_error("The program was not able to be read");
   }
@@ -26,16 +28,19 @@ string ReadFile(string fileName)
   return content;
 }
 
-int main() 
+int main()
 {
   vector<ExecutionScope> executionScopes;
-  Parser parser {&executionScopes};
+  Parser parser{&executionScopes};
 
   string programFileContents = ReadFile("program.rpl"); // I'm well aware of how bad hard coding a path like this is, this file shouldn't even be in the library anyway
-
   parser.parseFileContents(programFileContents);
 
-  executionScopes.at(0).ExecuteScope();
+  Executor executor{&executionScopes};
+  executor.loadSymbols(rpl_builtin::libSymbols);
+  executor.loadExecutorSymbols(rpl_builtin::execSymbols);
+
+  executor.execRoot();
 
   return 0;
 }
