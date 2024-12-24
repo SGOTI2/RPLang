@@ -4,7 +4,17 @@
 #include <unordered_map>
 using namespace std;
 
+class rawToken : public string
+{
+public:
+  rawToken(const string _str): string(_str) 
+  {};
+};
+
+static_assert(!is_same_v<rawToken, string>, "rawToken cannot be the same type as string");
+
 typedef variant<
+  rawToken,
   string, 
   double, 
   bool 
@@ -28,9 +38,9 @@ public:
   size_t instructionCounter = 0;
   ExecutionScope *jmpReturnScope = nullptr;
   bool halt = false;
-  unordered_map<string, variableType> internal_variables;
   string symbol = "";
   program instructions;
+  bool previousIfStatementSuccess = false;
 
   ExecutionScope(const program &instructions_);
   ExecutionScope(const program &instructions_, const string symbol_);

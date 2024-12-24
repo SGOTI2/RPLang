@@ -1,3 +1,19 @@
-func hello;
-  log "Hello?";
+if true;
+  log "SUCCESS: If true, ran";
 end;
+
+if false;
+  log "FAILURE: If false, ran";
+else;
+  log "SUCCESS: Else after if false, ran";
+end;
+
+if false;
+  log "FAILURE: If false, ran";
+elif true;
+  log "SUCCESS: else if true after if false, ran";
+else;
+  log "FAILURE: Else after else if true, ran";
+end;
+
+log "SUCCESS if FAILURE is not printed here: " FAILURE;

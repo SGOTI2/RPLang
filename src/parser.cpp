@@ -43,7 +43,7 @@ program Parser::convertToProgram(const string &plainText)
     for (const string &token : tokens)
     {
       // Token begins a quote
-      if (token.front() == '\"')
+      if (token.front() == '\"' && token != "\"")
       {
         awaitingStringClose = true;
         stringVar = "";
@@ -79,7 +79,7 @@ program Parser::convertToProgram(const string &plainText)
   return resultingProgram;
 }
 
-size_t Parser::detectSubScopes(program *instructions)
+size_t Parser::detectSubScopes(program *instructions, bool subscopeStopsAtElse)
 {
   /* Steps for detecting sub-scopes
     1. Look at the command for each instruction in the program
@@ -92,7 +92,22 @@ size_t Parser::detectSubScopes(program *instructions)
   {
     // Switch command name
     string cmdName = (*it).first;
-    if (cmdName == "func") 
+
+    bool elseIsEndingScope = (subscopeStopsAtElse && (cmdName == "else" || cmdName == "elif"));
+
+    // Subscope End Tokens
+    if (cmdName == "end" || elseIsEndingScope)
+    {
+      // Remove the following instructions, 
+      instructions->erase(it, instructions->end());
+
+      if (elseIsEndingScope)
+        return instructions->size() + 1; // Same as below but don't remove the else part because it needs to start the next scope
+
+      // Return size of the scope +2 so the end line is included + line for scope start
+      return instructions->size() + 2;
+    }
+    else if (cmdName == "func") 
     {
       string symbol = getArgAtAs<string>((*it).second, 0);
 
@@ -103,15 +118,38 @@ size_t Parser::detectSubScopes(program *instructions)
       it = instructions->erase(it, it + scopeLength);
       continue;
     }
-    else if (cmdName == "end")
+    else if (cmdName == "if" || cmdName == "else" || cmdName == "elif")
     {
-      // Remove the following instructions, 
-      instructions->erase(it, instructions->end());
+      // Get the _rpl_if args ready while `it` is still at the right spot
+      vector<variableType> args = {(double)executionScopes->size() + 1};
+      args.insert(args.end(), (*it).second.begin(), (*it).second.end());
 
-      // Return size of the scope +2 so the end line is included + line for scope start
-      return instructions->size() + 2;
+      // Discover and then create the scope for the if statement
+      program subProgram(it + 1, instructions->end());
+      size_t scopeLength = detectSubScopes(&subProgram, true); // Subscope should end at else / elif
+      executionScopes->push_back(ExecutionScope(subProgram));
+
+      if (scopeLength == 0)
+        throw ParsingError("If statement must contain some executable code");
+
+      // Remove code in the if's scope from the main scope
+      it = instructions->erase(it, it + scopeLength);
+
+      if (cmdName == "if")
+        instructions->insert(it, {"_rpl_if", args});
+      else if (cmdName == "elif")
+        instructions->insert(it, {"_rpl_elif", args});
+      else if (cmdName == "else") {
+        if (args.size() > 2) {
+          printf("Parsing: Else was converted to elif because it was passed an argument");
+          instructions->insert(it, {"_rpl_elif", args});
+          continue;
+        }
+
+        instructions->insert(it, {"_rpl_else", args});
+      }
+      continue;
     }
-
     ++it;
   }
   return 0;
@@ -149,5 +187,14 @@ string Parser::removeLeadingWhitespace(const string &str)
 /// TODO: Implement type conversions, ex.: "1.2" -> (double)1.2, "52" -> (int)52, "true" -> (bool)true
 variableType Parser::tokenToType(const string &token)
 {
-  return token;
+  if (token == "true")
+    return true;
+  else if (token == "false")
+    return false;
+  char *endCharPtr;
+  double vDouble = strtod(token.c_str(), &endCharPtr);
+  // End char is null, no end char, entire string is a double
+  if (!*endCharPtr || *endCharPtr == 'f')
+    return vDouble;
+  return rawToken(token);
 }

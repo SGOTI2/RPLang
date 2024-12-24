@@ -5,6 +5,7 @@
 using namespace std;
 
 #include "executionScope.hpp"
+#include "parser.hpp"
 
 class RplRuntimeError : public exception
 {
@@ -33,8 +34,13 @@ public:
   ExecutionScope *currentScope = nullptr;
   unordered_map<string, executableCommand> commands;
   unordered_map<string, executorCommand> executorCommands;
+  unordered_map<string, variableType> variables;
 
   void execScope();
+
+  void expandVariables(vector<variableType> *args);
+
+  void _debugPrintVars();
 
   // Public functions (safe to use)
   Executor(vector<ExecutionScope> *executionScopes_);
@@ -45,4 +51,15 @@ public:
 
   // Load commands that need the full executor context to run
   void loadExecutorSymbols(unordered_map<string, executorCommand> &execSymbols);
+
+  // Store/overwrite a variable in the program context 
+  void storeVariable(const string &name, const variableType &value);
+
+  // Load a variable
+  variableType loadVariable(const string &name);
+  variableType loadVariable(const string &name, const variableType &default_);
+  template<typename T>
+  T loadVariable(const string &name);
+  template<typename T>
+  T loadVariable(const string &name, const T &default_);
 };

@@ -42,5 +42,7 @@ int main()
 
   executor.execRoot();
 
+  executor._debugPrintVars();
+
   return 0;
 }
