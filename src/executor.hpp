@@ -39,6 +39,7 @@ public:
   void execScope();
 
   void expandVariables(vector<variableType> *args);
+  void expandExpressions(vector<variableType> *args);
 
   void _debugPrintVars();
 

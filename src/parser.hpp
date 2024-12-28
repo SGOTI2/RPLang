@@ -29,11 +29,6 @@ private:
   // Detect and remove sub-scopes from the instructions for a given scope, return where the scope ends so it can be removed
   size_t detectSubScopes(program *instructions, bool subscopeStopsAtElse = false);
 
-  /// MARK: Helpers
-  vector<string> tokenizeLineOfCode(const string &lineOfCode);
-  string removeLeadingWhitespace(const string &str);
-  variableType tokenToType(const string &token);
-
 public:
   Parser(vector<ExecutionScope> *executionScopes_);
   void parseFileContents(const string &contents);
@@ -46,6 +41,13 @@ public:
 
   template <typename T>
   static vector<T> getAllArgsAs(const vector<variableType> &args);
+  
+  /// MARK: Helpers
+  static vector<string> tokenizeLineOfCode(const string &lineOfCode);
+  static string removeLeadingWhitespace(const string &str);
+  // Line Of Code Tokens to Type
+  static vector<variableType> LOCTokensToType(const vector<string> &tokens);
+  static variableType tokenToType(const string &token);
 };
 
 template <typename T>

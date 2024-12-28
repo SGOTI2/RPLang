@@ -15,6 +15,7 @@ void Executor::execScope()
     string command = currentInstruction.first;
 
     expandVariables(&(currentInstruction.second));
+    expandExpressions(&(currentInstruction.second));
 
     auto execCmdIt = executorCommands.find(command);
     if (execCmdIt != executorCommands.end())
@@ -47,13 +48,25 @@ void Executor::expandVariables(vector<variableType> *args)
   {
     visit([this, args, i](auto &&val) {
       using argT = decay_t<decltype(val)>;
-      // Is of variable name type (string)
-      if constexpr (is_same_v<string, argT>)
+      // Is of variable name type (rawToken)
+      if constexpr (is_same_v<rawToken, argT>)
       {
         unordered_map<string, variableType>::iterator valueIt = variables.find(val);
         if (valueIt != variables.end())    
           args->at(i) = valueIt->second; // Assign the value of the var
       } 
+    }, args->at(i));
+  }
+}
+
+void Executor::expandExpressions(vector<variableType> *args)
+{
+  for (size_t i = 0; i < args->size(); i++)
+  {
+    visit([this, args, i](auto &&val) {
+      using argT = decay_t<decltype(val)>;
+      if constexpr (is_same_v<Expression, argT>)
+        args->at(i) = val.evaluate(this);
     }, args->at(i));
   }
 }

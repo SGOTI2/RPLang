@@ -16,4 +16,36 @@ else;
   log "FAILURE: Else after else if true, ran";
 end;
 
-log "SUCCESS if FAILURE is not printed here: " FAILURE;
+log "SUCCESS if FAILURE is not printed in here -> |" FAILURE "| rawToken vs string type test";
+
+let x true;
+let y 10.5;
+let z y;
+
+if x;
+  log "SUCCESS: Sole bool variable if, ran";
+end;
+
+if (true);
+  log "SUCCESS: (true) Expression evaluated true";
+end;
+
+if (true == true);
+  log "SUCCESS: (true == true) Expression evaluated true";
+end;
+
+if (true != false);
+  log "SUCCESS: (true != false) Expression evaluated true";
+end;
+
+if (true || false);
+  log "SUCCESS: (true || false) Expression evaluated true";
+end;
+
+if ((true) == true);
+  log "SUCCESS: ((true) == true) Expression evaluated true";
+end;
+
+if ((1 + 1) == 2);
+  log "SUCCESS: ((1 + 1) == 2) Expression evaluated true";
+end;

@@ -35,42 +35,7 @@ program Parser::convertToProgram(const string &plainText)
     string command = tokens.front();
     tokens.erase(tokens.begin());
 
-    // Generally all of the tokens except for strings which are combined into 1 arg
-    vector<variableType> args = {};
-    bool awaitingStringClose = false;
-    string stringVar = "";
-
-    for (const string &token : tokens)
-    {
-      // Token begins a quote
-      if (token.front() == '\"' && token != "\"")
-      {
-        awaitingStringClose = true;
-        stringVar = "";
-      }
-
-      // We are in a quote
-      if (awaitingStringClose) 
-      {
-        if (stringVar != "")
-          stringVar += " ";
-        
-        stringVar += token;
-      } 
-      else
-        args.push_back(tokenToType(token));
-
-      // Token ends a quote
-      if (token.back() == '\"')
-      {
-        awaitingStringClose = false;
-        // Put string arg in args, removing the leading and trailing quotes
-        args.push_back(stringVar.substr(1, stringVar.size() - 2));
-      }
-    }
-
-    if (awaitingStringClose)
-      throw ParsingError("String not closed");
+    vector<variableType> args = LOCTokensToType(tokens);
 
     instruction thisInstruction = make_pair(command, args);
     resultingProgram.push_back(thisInstruction);
@@ -156,6 +121,78 @@ size_t Parser::detectSubScopes(program *instructions, bool subscopeStopsAtElse)
 }
 
 /// MARK: Helpers
+
+vector<variableType> Parser::LOCTokensToType(const vector<string> &tokens)
+{
+  // Generally all of the tokens except for strings and expressions which are combined into 1 arg
+  vector<variableType> args = {};
+  bool awaitingStringClose = false;
+  string stringVar = "";
+
+  int expressionDepth = 0;
+  string currentExpression = "";
+
+  for (const string &token : tokens)
+  {
+    // Don't make expressions in strings!
+    if (!awaitingStringClose) 
+    {
+      expressionDepth += count(token.begin(), token.end(), '(');
+      if (expressionDepth > 0) {
+        if (currentExpression != "")
+          currentExpression += " ";
+        currentExpression += token;
+      }
+      expressionDepth -= count(token.begin(), token.end(), ')');
+
+      if (currentExpression != "" && expressionDepth <= 0) 
+      {
+        if (expressionDepth < 0)
+          throw ParsingError("Expression has too many closing parentheses");
+        args.push_back(Expression(currentExpression));
+        currentExpression = "";
+        continue;
+      }
+
+      // No token parsing in Expressions they will handle themselves, this includes strings.
+      // See the Expression::evaluate function for the full implementation
+      if (expressionDepth > 0)
+        continue;
+    }
+
+
+    // Token begins a quote
+    if (token.front() == '\"' && token != "\"")
+    {
+      awaitingStringClose = true;
+      stringVar = "";
+    }
+
+    // We are in a quote
+    if (awaitingStringClose) 
+    {
+      if (stringVar != "")
+        stringVar += " ";
+      
+      stringVar += token;
+    } 
+    else
+      args.push_back(tokenToType(token));
+
+    // Token ends a quote
+    if (token.back() == '\"')
+    {
+      awaitingStringClose = false;
+      // Put string arg in args, removing the leading and trailing quotes
+      args.push_back(stringVar.substr(1, stringVar.size() - 2));
+    }
+  }
+
+  if (awaitingStringClose)
+    throw ParsingError("String not closed");
+  
+  return args;
+}
 
 vector<string> Parser::tokenizeLineOfCode(const string &lineOfCode)
 {

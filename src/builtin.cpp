@@ -41,11 +41,14 @@ void rpl_builtin::let(Executor *executor, const vector<variableType> *args)
 {
   if (args->size() != 2) 
     throw RplRuntimeError("Let requires exactly 2 arguments");
-  executor->storeVariable(Parser::getArgAtAs<string>(*args, 0), args->at(1)); 
+  executor->storeVariable(Parser::getArgAtAs<rawToken>(*args, 0), args->at(1));
 }
 
 void rpl_builtin::_rpl_if(Executor *executor, const vector<variableType> *args)
 {
+  if (args->size() > 2)
+    throw RplRuntimeError("Expression or boolean value is expected for if statements");
+
   int scopeID = (int)Parser::getArgAtAs<double>(*args, 0);
   bool statement = Parser::getArgAtAs<bool>(*args, 1);
 
@@ -74,6 +77,9 @@ void rpl_builtin::_rpl_else(Executor *executor, const vector<variableType> *args
 
 void rpl_builtin::_rpl_elif(Executor *executor, const vector<variableType> *args)
 {
+  if (args->size() > 2)
+    throw RplRuntimeError("Expression or boolean value is expected for if statements");
+
   if (executor->currentScope->previousIfStatementSuccess)
     return;
     

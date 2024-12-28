@@ -13,12 +13,17 @@ public:
 
 static_assert(!is_same_v<rawToken, string>, "rawToken cannot be the same type as string");
 
+class Expression;
+
 typedef variant<
   rawToken,
+  Expression,
   string, 
   double, 
   bool 
 > variableType;
+
+#include "expression.hpp"
 
 typedef pair<string, vector<variableType>> instruction;
 /*
