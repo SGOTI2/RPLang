@@ -52,6 +52,7 @@ size_t Parser::detectSubScopes(program *instructions, bool subscopeStopsAtElse)
       a. Take where the scope ended and remove from where the scope started and ended (returned by this function) to isolate the code for this scope only
     3. If the command is one that ends a scope (end), remove the rest of the instructions for this scope and return where this scope ended
   */
+  int collapsedLines = 0;
   program::iterator it = instructions->begin();
   while (it != instructions->end())
   {
@@ -66,21 +67,33 @@ size_t Parser::detectSubScopes(program *instructions, bool subscopeStopsAtElse)
       // Remove the following instructions, 
       instructions->erase(it, instructions->end());
 
+      // Remove the length of the scope + however much was collapsed and removed before
+      // Because the scopes that encapsulate this one have not had their code updated yet
+
       if (elseIsEndingScope)
-        return instructions->size() + 1; // Same as below but don't remove the else part because it needs to start the next scope
+        return instructions->size() + collapsedLines + 1; // Same as below but don't remove the else part because it needs to start the next scope
 
       // Return size of the scope +2 so the end line is included + line for scope start
-      return instructions->size() + 2;
+      return instructions->size() + collapsedLines + 2;
     }
     else if (cmdName == "func") 
     {
-      string symbol = getArgAtAs<string>((*it).second, 0);
+      rawToken symbol = getArgAtAs<rawToken>((*it).second, 0);
+
+      vector<rawToken> funcArgs = getAllArgsAs<rawToken>((*it).second);
+      funcArgs.erase(funcArgs.begin());
+
+      if (symbol.empty())
+        throw ParsingError("Function name must be provided");
 
       program subProgram(it + 1, instructions->end());
       size_t scopeLength = detectSubScopes(&subProgram);
-      executionScopes->push_back(ExecutionScope(subProgram, symbol));
+      executionScopes->push_back(ExecutionScope(subProgram, symbol, funcArgs));
 
       it = instructions->erase(it, it + scopeLength);
+
+      collapsedLines += scopeLength;
+
       continue;
     }
     else if (cmdName == "if" || cmdName == "else" || cmdName == "elif")
@@ -99,6 +112,9 @@ size_t Parser::detectSubScopes(program *instructions, bool subscopeStopsAtElse)
 
       // Remove code in the if's scope from the main scope
       it = instructions->erase(it, it + scopeLength);
+
+      // Minus one because were are about to add a extra instruction
+      collapsedLines += scopeLength - 1;
 
       if (cmdName == "if")
         instructions->insert(it, {"_rpl_if", args});
@@ -160,7 +176,6 @@ vector<variableType> Parser::LOCTokensToType(const vector<string> &tokens)
         continue;
     }
 
-
     // Token begins a quote
     if (token.front() == '\"' && token != "\"")
     {
@@ -177,7 +192,14 @@ vector<variableType> Parser::LOCTokensToType(const vector<string> &tokens)
       stringVar += token;
     } 
     else
+    {
+      // This is what allows for, let x = 10 + 5, to work where the `10 + 5` part is the expression and the `=` is dropped
+      if (token == "=") {
+        expressionDepth = 1; // Start an expression
+        continue; // Drop the =
+      }
       args.push_back(tokenToType(token));
+    }
 
     // Token ends a quote
     if (token.back() == '\"')
@@ -191,6 +213,9 @@ vector<variableType> Parser::LOCTokensToType(const vector<string> &tokens)
   if (awaitingStringClose)
     throw ParsingError("String not closed");
   
+  if (currentExpression != "") 
+    args.push_back(Expression(currentExpression));
+
   return args;
 }
 
@@ -231,7 +256,10 @@ variableType Parser::tokenToType(const string &token)
   char *endCharPtr;
   double vDouble = strtod(token.c_str(), &endCharPtr);
   // End char is null, no end char, entire string is a double
-  if (!*endCharPtr || *endCharPtr == 'f')
+  // If it ends with a `f` than assume its a double but make sure
+  // that its not the first character in the token, 
+  // thus preventing the token `fun` from matching as a double
+  if (!*endCharPtr || (*endCharPtr == 'f' && endCharPtr != &token.c_str()[0]))
     return vDouble;
   return rawToken(token);
 }

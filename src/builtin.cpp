@@ -11,7 +11,7 @@ void rpl_builtin::log(ExecutionScope *scope, const vector<variableType> *args)
 
 void rpl_builtin::run(Executor *executor, const vector<variableType> *args)
 {
-  string functionName = Parser::getArgAtAs<string>(*args, 0);
+  string functionName = Parser::getArgAtAs<rawToken>(*args, 0);
   for (ExecutionScope &scope : *executor->executionScopes)
   {
     if (scope.symbol == functionName) 
@@ -41,7 +41,9 @@ void rpl_builtin::let(Executor *executor, const vector<variableType> *args)
 {
   if (args->size() != 2) 
     throw RplRuntimeError("Let requires exactly 2 arguments");
-  executor->storeVariable(Parser::getArgAtAs<rawToken>(*args, 0), args->at(1));
+  // Tokens before they have been converted to their variable value and before expressions have been solved
+  vector<variableType> unresolvedRawTokens = executor->currentScope->instructions[executor->currentScope->instructionCounter].second;
+  executor->storeVariable(Parser::getArgAtAs<rawToken>(unresolvedRawTokens, 0), args->at(1));
 }
 
 void rpl_builtin::_rpl_if(Executor *executor, const vector<variableType> *args)

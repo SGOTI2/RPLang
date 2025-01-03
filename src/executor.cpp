@@ -113,7 +113,7 @@ void Executor::loadExecutorSymbols(unordered_map<string, executorCommand> &execS
 
 void Executor::storeVariable(const string &name, const variableType &value)
 {
-  variables.emplace(name, value);
+  variables.insert_or_assign(name, value);
 }
 
 variableType Executor::loadVariable(const string &name)

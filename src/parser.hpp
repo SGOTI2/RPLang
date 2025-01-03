@@ -21,6 +21,13 @@ public:
   }
 };
 
+class ArgumentTypeError : public ParsingError
+{
+public:
+  ArgumentTypeError(const char *msg) : ParsingError(msg)
+  {};
+};
+
 class Parser
 {
 private:
@@ -61,7 +68,7 @@ inline T Parser::getArgAtAs(const vector<variableType> &args, size_t index)
   if (holds_alternative<T>(arg))
     return get<T>(arg);
 
-  throw ParsingError("Argument is a incorrect type");
+  throw ArgumentTypeError("Argument is a incorrect type");
 }
 
 template <typename T>
@@ -70,7 +77,7 @@ inline T Parser::getAs(const variableType &var)
   if (holds_alternative<T>(var))
     return get<T>(var);
 
-  throw ParsingError("Input is of an incorrect type");
+  throw ArgumentTypeError("Input is of an incorrect type");
 }
 
 template <typename T>

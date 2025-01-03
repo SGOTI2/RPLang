@@ -48,6 +48,8 @@ variableType Expression::evaluate(Executor *executor)
     return lhs == rhs;
   if (op == "!=")
     return lhs != rhs;
+  if (op == "&&")
+    return Parser::getAs<bool>(lhs) && Parser::getAs<bool>(rhs);
   if (op == "||")
     return Parser::getAs<bool>(lhs) || Parser::getAs<bool>(rhs);
   if (op == "+")

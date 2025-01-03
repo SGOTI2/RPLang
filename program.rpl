@@ -42,6 +42,10 @@ if (true || false);
   log "SUCCESS: (true || false) Expression evaluated true";
 end;
 
+if (true && true);
+  log "SUCCESS: (true && true) Expression evaluated true";
+end;
+
 if ((true) == true);
   log "SUCCESS: ((true) == true) Expression evaluated true";
 end;
@@ -49,3 +53,62 @@ end;
 if ((1 + 1) == 2);
   log "SUCCESS: ((1 + 1) == 2) Expression evaluated true";
 end;
+
+if ((((10 + 2) * (4 - 2)) / 6) == 4);
+  log "SUCCESS: ((((10 + 2) * (4 - 2)) / 6) == 4) Expression evaluated true";
+end;
+
+if (y == 10.5);
+  log "SUCCESS: (y == 10.5) Expression evaluated true";
+end;
+
+if (y == z);
+  log "SUCCESS: (y == z) Expression evaluated true";
+end;
+
+let a = 10 + 5;
+
+if (a == 15);
+  log "SUCCESS: Equal sign implied expression";
+end;
+
+let a = 20;
+
+if (a == 20);
+  log "SUCCESS: Variable update works as expected";
+end;
+
+let a = a + 5;
+
+if (a == 25);
+  log "SUCCESS: Variable equals expression valid";
+end;
+
+
+
+log "---- Section Break ----";
+
+
+
+func runTestFn;
+  log "SUCCESS: Function call ran";  
+end;
+
+run runTestFn;
+log "SUCCESS: Function returned";
+
+func nestTestFn;
+  if true;
+    log "SUCCESS: Function Nesting";
+  end;
+end;
+
+run nestTestFn;
+
+func encapsulatingFullScopeTestFn;
+  func fullScopeTestFn;
+    log "SUCCESS: Nested functions accessible from top scope";
+  end;
+end;
+
+run fullScopeTestFn;

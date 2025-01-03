@@ -44,9 +44,10 @@ public:
   ExecutionScope *jmpReturnScope = nullptr;
   bool halt = false;
   string symbol = "";
+  vector<rawToken> arguments {};
   program instructions;
   bool previousIfStatementSuccess = false;
 
   ExecutionScope(const program &instructions_);
-  ExecutionScope(const program &instructions_, const string symbol_);
+  ExecutionScope(const program &instructions_, const string symbol_, const vector<rawToken> arguments_);
 };

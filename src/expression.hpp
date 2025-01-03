@@ -10,7 +10,7 @@ class Executor;
 class Expression : public string
 {
 private:
-  string removeParentheses(string str);
+  static string removeParentheses(string str);
 public:
   inline Expression(const string _expression): string(_expression)
   {}
